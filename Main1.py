@@ -15,14 +15,36 @@ customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "gre
 
 ###############################Connect to database and create Members table#######################################
 
-mydb = mysql.connector.connect(host='127.0.0.1',user='root', password='######')
+#Uses the 'db.creds' file for all of the credential information.
+#The contents of the file should be as follows:
+#Host_IP=<address of the database server>
+#Host_Port=<listening port of the database server>
+#Account_Username=<username of the account for using the database>
+#Account_Password=<password of the above user>
+#Database_Name=<name of the database>
+#Table_Name=<name of the table>
+file=open("db.creds","r")
+creds=[]
+while(True):
+    line=file.readline()
+    if not line:
+        break
+    print("Read from db.creds: "+line)
+    line=line.split("=")[1].strip()
+    creds.append(line)
+file.close()
+
+databaseName=creds[4]
+tableName=creds[5]
+
+mydb = mysql.connector.connect(host=creds[0],user=creds[2], password=creds[3])
 
 cursor = mydb.cursor()
-cursor.execute("""
-USE GYM_DATABASE;
+cursor.execute(f"""
+USE {databaseName};
 """)
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS members(  
+cursor.execute(f"""
+CREATE TABLE IF NOT EXISTS {tableName}(  
 id int unsigned auto_increment not null,
 first_name TEXT NOT NULL,
 last_name TEXT NOT NULL,
@@ -47,12 +69,12 @@ root.geometry("1160x600")
 ###############################Fetch all the data from the members table#######################################
 
 def query_database():
-    mydb = mysql.connector.connect(host='127.0.0.1',user='root', password='@Dany852456')
+    mydb = mysql.connector.connect(host=creds[0],user=creds[2], password=creds[3])
     cursor = mydb.cursor()
-    cursor.execute("""
-    USE GYM_DATABASE;
+    cursor.execute(f"""
+    USE {databaseName};
     """)
-    cursor.execute("SELECT * FROM members")
+    cursor.execute(f"SELECT * FROM {tableName}")
     records = cursor.fetchall()
     global count 
     count =0
@@ -223,13 +245,13 @@ def remove_selection():
 
     fname = fn_entry.get()
     lname = ln_entry.get()
-    mydb = mysql.connector.connect(host='127.0.0.1',user='root', password='@Dany852456')
+    mydb = mysql.connector.connect(host=creds[0],user=creds[2], password=creds[3])
     cursor = mydb.cursor()
-    cursor.execute("""
-    USE GYM_DATABASE;
+    cursor.execute(f"""
+    USE {databaseName};
     """)
     val = (fname, lname)
-    sql = "DELETE from members WHERE first_name= %s AND last_name= %s "
+    sql = f"DELETE from {tableName} WHERE first_name= %s AND last_name= %s "
 
     cursor.execute(sql, val)
 
@@ -267,14 +289,14 @@ def update_record():
     state = state_entry.get()
     zcode = zcode_entry.get()
 
-    mydb = mysql.connector.connect(host='127.0.0.1',user='root', password='@Dany852456')
+    mydb = mysql.connector.connect(host=creds[0],user=creds[2], password=creds[3])
     cursor = mydb.cursor()
-    cursor.execute("""
-    USE GYM_DATABASE;
+    cursor.execute(f"""
+    USE {databaseName};
     """)
 
     val = (firstname, lastname, dob1, gender, email, phone, address, city, state, zcode, fname, lname)
-    sql = """UPDATE members SET first_name = %s, last_name = %s, DOB = %s, gender = %s, email = %s, phone = %s, address = %s, city = %s, state = %s, zip_code = %s WHERE first_name= %s AND last_name= %s""" 
+    sql = f"""UPDATE {tableName} SET first_name = %s, last_name = %s, DOB = %s, gender = %s, email = %s, phone = %s, address = %s, city = %s, state = %s, zip_code = %s WHERE first_name= %s AND last_name= %s""" 
 
     cursor.execute(sql, val)
 
@@ -300,10 +322,10 @@ def update_record():
 
 def add_member():
 
-    mydb = mysql.connector.connect(host='127.0.0.1',user='root', password='@Dany852456')
+    mydb = mysql.connector.connect(host=creds[0],user=creds[2], password=creds[3])
     cursor = mydb.cursor()
-    cursor.execute("""
-    USE GYM_DATABASE;
+    cursor.execute(f"""
+    USE {databaseName};
     """)
 
     fname = fn_entry.get()
@@ -317,7 +339,7 @@ def add_member():
     state = state_entry.get()
     zipcode = zcode_entry.get()
 
-    sql = """INSERT INTO members(first_name,last_name, DOB, gender, email, phone, address, city, state, zip_code)
+    sql = f"""INSERT INTO {tableName}(first_name,last_name, DOB, gender, email, phone, address, city, state, zip_code)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) """
 
     member_data = (fname,lname, dob, gender, email, phone, address, city, state, zipcode)
